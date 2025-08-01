@@ -1,0 +1,94 @@
+app:
+  github-token: ${GITHUB_TOKEN} # env variable
+  stackoverflow:
+    key: ${STACKOVERFLOW_KEY}
+    access-token: ${STACKOVERFLOW_TOKEN}
+  access-type: ORM
+  message-transport: Kafka # Kafka, HTTP
+  client-timeout: 30
+  rate-limit: 5
+  rate-durationinms: 60000
+  failCodes: 500, 501, 502, 503, 504, 505
+
+resilience4j.circuitbreaker:
+  instances:
+    breaker:
+      slidingWindowType: COUNT_BASED
+      minimumNumberOfCalls: 20
+      slidingWindowSize: 20
+      failureThreshold: 5s
+resilience4j.retry:
+  instances:
+    retry:
+      maxAttempts: 3
+      waitDuration: 500
+
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  config:
+    import: optional:file:.env
+  application:
+    name: Scrapper
+  liquibase:
+    enabled: false
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5433/tgbot?autoReconnect=true
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: INTERNAL://localhost:9092
+    template:
+      default-topic: update-links
+    producer.properties:
+      retries: 0
+      acks: 0
+      batch.size: 32768
+      linger.ms: 10000
+  cloud.zookeeper:
+    config.enabled: false
+    connect-string: localhost:2181
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+management:
+  port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  #          - *
+  #          - health
+  #          - prometheus
+  #          - info
+  management:
+    endpoint:
+      prometheus:
+        enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+    export:
+      prometheus:
+        enabled: true
+      url: http://localhost:4318/v1/metrics
+
+server:
+  port: 8081
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui
